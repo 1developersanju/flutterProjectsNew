@@ -1,125 +1,99 @@
 import 'package:flutter/material.dart';
+import 'data.dart';
+import 'chat.dart';
+import 'utils.dart';
+import 'slidable_widget.dart';
 
-void main() => runApp(new MyApp());
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+  final String title = 'Whatsup';
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: App(),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: title,
+        theme: ThemeData(primarySwatch: Colors.green),
+        home: MainPage(title: title),
+      );
 }
 
-class App extends StatefulWidget {
+class MainPage extends StatefulWidget {
+  final String title;
+
+  const MainPage({
+    @required this.title,
+  });
+
   @override
-  AppState createState() => AppState();
+  _MainPageState createState() => _MainPageState();
 }
 
-class AppState extends State<App> {
-  Color caughtColor = Colors.grey;
+class _MainPageState extends State<MainPage> {
+  List<Chat> items = List.of(Data.chats);
 
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        DragBox(Offset(0.0, 0.0), 'Box Blue', Colors.blueAccent),
-        DragBox(Offset(300.0, 0.0), 'Box orange', Colors.orange),
-        DragBox(Offset(300.0, 0.0), 'Box green', Colors.lightGreen),
-        Positioned(
-          left: 100.0,
-          bottom: 50.0,
-          child: DragTarget(
-            onAccept: (Color color) {
-              caughtColor = color;
-            },
-            builder: (
-              BuildContext context,
-              List<dynamic> accepted,
-              List<dynamic> rejected,
-            ) {
-              return Container(
-                width: 200.0,
-                height: 200.0,
-                decoration: BoxDecoration(
-                  color: accepted.isEmpty ? caughtColor : Colors.grey.shade200,
-                ),
-                child: Center(
-                  child: Text("Drag Here!"),
-                ),
-              );
-            },
-          ),
-        )
-      ],
-    );
-  }
-}
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: ListView.separated(
+          itemCount: items.length,
+          separatorBuilder: (context, index) => Divider(),
+          itemBuilder: (context, index) {
+            final item = items[index];
 
-class DragBox extends StatefulWidget {
-  final Offset initPos;
-  final String label;
-  final Color itemColor;
-
-  DragBox(this.initPos, this.label, this.itemColor);
-
-  @override
-  DragBoxState createState() => DragBoxState();
-}
-
-class DragBoxState extends State<DragBox> {
-  Offset position = Offset(0.0, 0.0);
-
-  @override
-  void initState() {
-    super.initState();
-    position = widget.initPos;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-        left: position.dx,
-        top: position.dy,
-        child: Draggable(
-          data: widget.itemColor,
-          child: Container(
-            width: 100.0,
-            height: 100.0,
-            color: widget.itemColor,
-            child: Center(
-              child: Text(
-                widget.label,
-                style: TextStyle(
-                  color: Colors.white,
-                  decoration: TextDecoration.none,
-                  fontSize: 20.0,
-                ),
-              ),
-            ),
-          ),
-          onDraggableCanceled: (velocity, offset) {
-            setState(() {
-              position = offset;
-            });
+            return SlidableWidget(
+              child: buildListTile(item),
+              onDismissed: (action) =>
+                  dismissSlidableItem(context, index, action),
+            );
           },
-          feedback: Container(
-            width: 120.0,
-            height: 120.0,
-            color: widget.itemColor.withOpacity(0.5),
-            child: Center(
-              child: Text(
-                widget.label,
-                style: TextStyle(
-                  color: Colors.white,
-                  decoration: TextDecoration.none,
-                  fontSize: 18.0,
-                ),
-              ),
-            ),
-          ),
-        ));
+        ),
+      );
+
+  void dismissSlidableItem(
+      BuildContext context, int index, SlidableAction action) {
+    setState(() {
+      items.removeAt(index);
+    });
+
+    switch (action) {
+      case SlidableAction.archive:
+        Utils.showSnackBar(context, 'Chat has been archived');
+        break;
+      case SlidableAction.share:
+        Utils.showSnackBar(context, 'Chat has been shared');
+        break;
+      case SlidableAction.more:
+        Utils.showSnackBar(context, 'Selected more');
+        break;
+      case SlidableAction.delete:
+        Utils.showSnackBar(context, 'Chat has been deleted');
+        break;
+    }
   }
+
+  Widget buildListTile(Chat item) => ListTile(
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        leading: CircleAvatar(
+          radius: 28,
+          // backgroundImage: NetworkImage(item.urlAvatar),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.username,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(item.message)
+          ],
+        ),
+        onTap: () {},
+      );
 }
