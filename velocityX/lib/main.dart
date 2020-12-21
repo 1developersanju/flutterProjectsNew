@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:velocityX/textPage.dart';
+//import 'package:velocityX/textPage.dart';
+import 'boxPage.dart';
 
 void main() => runApp(MyApp());
 
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home:
           //TextPage(),
-          TextPage(),
+          BoxPage(),
     );
   }
 }
